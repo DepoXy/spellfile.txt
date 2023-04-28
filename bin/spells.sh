@@ -77,9 +77,9 @@ compile_spells () {
       >&2 echo
       >&2 echo "BWARE: Unpublished spells found. Publish them, then try again. E.g.,"
       >&2 echo
-      >&2 echo "     meld \\"
-      >&2 echo "       \"${active_spell}\" \\"
-      >&2 echo "       \"${compiled_spells}\" &"
+      >&2 echo "     $(fg_hotpink)meld$(attr_reset) \\"
+      >&2 echo "       $(fg_hotpink)\"${active_spell}\" \\$(attr_reset)"
+      >&2 echo "       $(fg_hotpink)\"${compiled_spells}\" &$(attr_reset)"
       >&2 echo
     fi
   else
@@ -317,6 +317,16 @@ print_unique_lines () {
 # --dictionary-order: Emoji, A-Z, then a-z.
 special_sort () {
   sed '/^$/d' | sort | LC_ALL='C' uniq | LC_ALL='C' sort -d
+}
+
+# ***
+
+fg_hotpink () {
+  printf "\033[38;2;255;0;135m"
+}
+
+attr_reset () {
+  printf "\033[0m"
 }
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
