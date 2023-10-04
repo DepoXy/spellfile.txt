@@ -94,8 +94,13 @@ compile_spells () {
     local source_spells_plus_new="${spells_without_ispell}-new"
     local spells_sync_executable="${source_spells_plus_new}.sh"
 
+    # Grab $1, $2, $3, or whatever from $@ using index.
+    local source_spell="${!i_spell}"
+    local sorted_source="${source_spell}--sorted"
+
     if ${cleanup_only}; then
       /bin/rm -f "${spells_sync_executable}"
+      /bin/rm -f "${sorted_source}"
 
       continue
     fi
@@ -107,9 +112,6 @@ compile_spells () {
 
     /bin/rm "${spells_without_ispell}"
 
-    # Grab $1, $2, $3, or whatever from $@ using index.
-    local source_spell="${!i_spell}"
-    local sorted_source="${source_spell}--sorted"
     cat "${source_spell}" | special_sort > "${sorted_source}"
 
     local rm_sorted_source=true
