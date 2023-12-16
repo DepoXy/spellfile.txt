@@ -44,7 +44,7 @@ Build Vim spell file 🧙 from sources
   If you have a private spell file at `~/.vim/spell/private`,
   here's how you would build your spell file:
 
-      $ cd path/to/spellfile.txt
+      $ cd path/to/spellfile.txt  # This repo's directory, not a text file
       $ bin/spells.sh compile-spells . ~/.vim/spell/private
       $ view ./.vim/spell/en.utf-8.add--compiled
 
