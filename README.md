@@ -24,7 +24,7 @@ Build Vim spell file 🧙 from sources
 
   - See how DepoXy uses `bin/spells.sh`:
 
-      [spellfile.txt-runner.sh](https://github.com/DepoXy/depoxy/blob/release/home/.config/ohmyrepos/spellfile.txt-runner.sh)
+      [spellfile.txt-runner.sh](https://github.com/DepoXy/depoxy/blob/release/home/.kit/git/ohmyrepos/lib/spellfile.txt-runner.sh)
 
 ## COMMANDS
 
