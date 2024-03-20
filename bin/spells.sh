@@ -99,8 +99,8 @@ compile_spells () {
     local sorted_source="${source_spell}--sorted"
 
     if ${cleanup_only}; then
-      /bin/rm -f "${spells_sync_executable}"
-      /bin/rm -f "${sorted_source}"
+      command rm -f -- "${spells_sync_executable}"
+      command rm -f -- "${sorted_source}"
 
       continue
     fi
@@ -110,7 +110,7 @@ compile_spells () {
 
     print_unique_lines "${spells_without_ispell}" "${active_spell}" > "${source_spells_plus_new}"
 
-    /bin/rm "${spells_without_ispell}"
+    command rm -- "${spells_without_ispell}"
 
     cat "${source_spell}" | special_sort > "${sorted_source}"
 
@@ -126,7 +126,7 @@ compile_spells () {
     if diff -q "${sorted_source}" "${source_spells_plus_new}" > /dev/null; then
       >&2 echo "✓ Synced: ${source_spell}"
 
-      /bin/rm -f "${spells_sync_executable}"
+      command rm -f -- "${spells_sync_executable}"
     else
       >&2 echo "✗ Creating sync script: ${spells_sync_executable}"
       >&2 echo "    diff \"${sorted_source}\" \"${source_spells_plus_new}\""
@@ -154,9 +154,9 @@ compile_spells () {
       chmod +x "${spells_sync_executable}"
     fi
 
-    /bin/rm "${source_spells_plus_new}"
+    command rm -- "${source_spells_plus_new}"
     
-    ! ${rm_sorted_source} || /bin/rm "${sorted_source}"
+    ! ${rm_sorted_source} || command rm -- "${sorted_source}"
   done
 
   echo "${compiled_spells}"
