@@ -27,7 +27,7 @@ init_spellssh () {
   VIM_SPELL_FILE="${HOME}/${VIM_SPELL_PATH}"
 
   # E.g., /path/to/spellfile.txt
-  SPF_BASE_DIR="$(dirname "$(realpath "$0")")/.."
+  SPF_BASE_DIR="$(dirname -- "$(realpath -- "$0")")/.."
   # E.g., /path/to/spellfile.txt/spell/en.utf-8.add
   SPF_SPELL_FILE="${SPF_BASE_DIR}/${VIM_SPELL_PATH}${SPELLS_PERSONAL_SUFFIX}"
 }
