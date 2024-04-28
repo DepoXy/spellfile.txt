@@ -339,7 +339,7 @@ check_deps () {
   check_dep_mktemp || failed=true
   check_dep_realpath || failed=true
 
-  ${failed} && exit 1
+  ${failed} && exit 1 || true
 }
 
 check_dep_mktemp () {
@@ -359,8 +359,6 @@ check_dep_realpath () {
   hint_install_brew () { >&2 echo "  brew install realpath"; }
 
   check_dep_with_hint 'realpath' 'realpath (from coreutils)' true
-
-  return 1
 }
 
 check_dep_with_hint () {
@@ -404,12 +402,44 @@ dispatch_command () {
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
+_NORMAL_EXIT=false
+
+exit_1 () { _NORMAL_EXIT=true; exit 1; }
+exit_0 () { _NORMAL_EXIT=true; exit 0; }
+
+exit_cleanup () {
+  if ! ${_NORMAL_EXIT}; then
+    # USAGE: Alert on unexpected error path, so you can add happy path.
+    >&2 echo "ALERT: "$(basename -- "$0")" exited abnormally!"
+    >&2 echo "- Hint: Enable \`set -x\` and run again..."
+  fi
+
+  trap - EXIT INT
+
+  ${_NORMAL_EXIT} && exit 0 || exit 1
+}
+
+int_cleanup () {
+  _NORMAL_EXIT=true
+
+  exit_cleanup
+}
+
+# ***
+
 main () {
+  set -e
+
+  trap -- exit_cleanup EXIT
+  trap -- int_cleanup INT
+
   check_deps
 
   init_spellssh
 
   dispatch_command "$@"
+
+  trap - EXIT INT
 }
 
 # Only run when executed; no-op when sourced.
