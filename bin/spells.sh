@@ -139,7 +139,7 @@ compile_spells () {
         echo "#        - Ignore new words on the left if you haven't copied"
         echo "#          ${compiled_spells} ${active_spell}"
         echo
-        echo -e 'flatpak run org.gnome.meld \\\n  "'"${source_spell}"'" \\\n  "'"${spells_sync_executable}"'" &'
+        echo -e $(print_meld_command) '\\\n  "'"${source_spell}"'" \\\n  "'"${spells_sync_executable}"'" &'
         echo
         echo "exit 0"
         echo
@@ -251,6 +251,40 @@ print_compiled_spells_path () {
   local compiled_spells="${spellish_path}${SPELLS_COMPILED_SUFFIX}"
 
   printf "%s" "${compiled_spells}"
+}
+
+# ***
+
+print_meld_command () {
+  # Prefer flatpak meld.
+  # - If you want your own meld, uninstall flatpak's.
+
+  # - SAVVY: Just check dir., as flatpak-info is slower. E.g., not:
+  #
+  #     if command -v "flatpak" > /dev/null 2>&1; then
+  #       # CXREF: ${HOME}/.local/share/flatpak/app/org.gnome.meld
+  #       if flatpak info org.gnome.meld > /dev/null 2>&1; then
+  #         ...
+  if [ -d "${HOME}/.local/share/flatpak/app/org.gnome.meld" ] \
+    || [ -d "/var/lib/flatpak/app/org.gnome.meld" ] \
+  ; then
+    printf "%s" "flatpak run org.gnome.meld"
+  elif [ -d "/Applications/Meld.app/" ]; then
+    # ALTLY: `open` could work, but fails on relative paths.
+    #   open /Applications/Meld.app/ --args "$@"
+    printf "%s" "/Applications/Meld.app/Contents/MacOS/Meld"
+  elif type -f "meld" > /dev/null 2>&1; then
+    # `type -f` ignores functions, i.e., don't match the function we're in.
+
+    # We don't need ourselves again.
+    unset -f meld
+
+    printf "%s" "/usr/bin/env meld"
+  else
+    >&2 echo "ERROR: Cannot locate meld (via flatpak or on PATH)"
+
+    exit 1
+  fi
 }
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
