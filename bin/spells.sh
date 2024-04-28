@@ -62,13 +62,17 @@ compile_spells () {
 
   local cleanup_only=false
 
-  if [ -f "${active_spell}" ] \
+  if [ -s "${active_spell}" ] \
     && ! diff -q "${compiled_spells}" "${active_spell}" > /dev/null \
   ; then
     # Normally --compiled falls behind active_spell, because when user adds
     # dictionary words in Vim, Vim updates active_spell.
     # - If --compiled has words, means user needs to update active_spell
     #   (should rarely happen).
+    # - Note the [ -s "${active_spell}" ] — skip this check in the Vim
+    #   spell file is empty. This happens when user is standing up a new
+    #   Vim install, and after this script creates the --compiled file,
+    #   the caller can copy that to active_spell and commit it.
     local unpub_cnt
     unpub_cnt=$(print_unique_lines "${active_spell}" "${compiled_spells}" -1 | wc -l)
 
