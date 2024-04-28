@@ -65,7 +65,6 @@ compile_spells () {
   if [ -f "${active_spell}" ] \
     && ! diff -q "${compiled_spells}" "${active_spell}" > /dev/null \
   ; then
-
     # Normally --compiled falls behind active_spell, because when user adds
     # dictionary words in Vim, Vim updates active_spell.
     # - If --compiled has words, means user needs to update active_spell
@@ -94,7 +93,7 @@ compile_spells () {
     local source_spells_plus_new="${spells_without_ispell}-new"
     local spells_sync_executable="${source_spells_plus_new}.sh"
 
-    # Grab $1, $2, $3, or whatever from $@ using index.
+    # Grab $1, $2, or $3, etc., from $@ using index.
     local source_spell="${!i_spell}"
     local sorted_source="${source_spell}--sorted"
 
@@ -213,6 +212,7 @@ cat_spells () {
   done
 }
 
+# Unused fcn.
 merge_spells () {
   local spell_paths
   spell_paths="$(verify_and_print_spell_paths "$@")"
