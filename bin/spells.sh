@@ -36,6 +36,7 @@ init_spellssh () {
 
 compile_spells () {
   local homeish_path="$1"
+  shift
 
   local compiled_spells
   compiled_spells="$(print_compiled_spells_path "${homeish_path}")"
