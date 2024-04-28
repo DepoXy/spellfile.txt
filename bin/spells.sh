@@ -44,7 +44,7 @@ compile_spells () {
 
   local spell_paths
   local echoerr_spell_paths=${SPF_PRINT_SPELLS:-true}
-  spell_paths="$(verify_and_print_spell_paths "$@")"
+  spell_paths="$(find_and_print_spell_paths "$@")"
   unset -v echoerr_spell_paths
 
   set -- ${spell_paths}
@@ -163,6 +163,41 @@ compile_spells () {
 
 # ***
 
+# Here's a simpler de-deduplicate, but doesn't honor caller's order:
+#
+#   verify_and_print_spell_paths "$@" | sort | uniq
+#
+# We'll walk the results instead to de-duplicate, and to honor the
+# caller's original order. But it's not the most elegant code.
+
+find_and_print_spell_paths () {
+  local spell_paths
+  spell_paths="$(verify_and_print_spell_paths "$@")"
+
+  if [ -z "${spell_paths}" ]; then
+    >&2 echo "ERROR: No spell files found"
+
+    return 1
+  fi
+
+  local n_spellfiles=$(echo "${spell_paths}" | wc -l)
+  for i_spath in $(seq 1 ${n_spellfiles}); do
+    # This is so inefficient, but it's just 3 or 4 lines in practice.
+    local spath="$(echo "${spell_paths}" | head -n ${i_spath} | tail -n 1)"
+    local unique=true
+
+    if [ ${i_spath} -gt 1 ]; then
+      if echo "${spell_paths}" | head -n $((${i_spath} - 1)) | grep -q -e "^${spath}$"; then
+        unique=false
+      fi
+    fi
+
+    if ${unique}; then
+      echo "${spath}"
+    fi
+  done
+}
+
 verify_and_print_spell_paths () {
   local n_spells=0
 
@@ -184,7 +219,7 @@ verify_and_print_spell_paths () {
 
     ! ${echoerr_spell_paths:-false} || >&2 echo "${n_spells}: ${probe}"
 
-    echo "${probe}"
+    realpath -- "${probe}"
   done
 }
 
@@ -215,7 +250,7 @@ cat_spells () {
 # Unused fcn.
 merge_spells () {
   local spell_paths
-  spell_paths="$(verify_and_print_spell_paths "$@")"
+  spell_paths="$(find_and_print_spell_paths "$@")"
 
   set -- ${spell_paths}
 
