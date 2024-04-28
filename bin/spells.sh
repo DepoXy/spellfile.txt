@@ -217,7 +217,7 @@ merge_spells () {
   local spell_paths
   spell_paths="$(verify_and_print_spell_paths "$@")"
 
-  set -- "${spell_paths}"
+  set -- ${spell_paths}
 
   merge_spells_verified "$@"
 }
