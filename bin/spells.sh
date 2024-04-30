@@ -159,9 +159,8 @@ compile_spells () {
         echo "#   and this and any similar scripts will have been removed."
         echo
         echo "✂️"
-        echo "# Copy words to the leftward source:"
+        echo "# Copy appropriate words to the leftward source:"
         echo "#   ${source_spell}"
-        echo "# (but do not copy these top three lines)"
         cat "${source_spells_plus_new}"
       ) > "${spells_sync_executable}"
 
@@ -258,7 +257,7 @@ cat_spells () {
 
     # I've never seen a pound sign used in the spell file, so this should be
     # okay to allow comments, and to filter them here.
-    cat "${path}" | sed 's/ \+#.*//g'
+    cat "${path}" | sed 's/ \+#.*//g' | sed '/^#/d'
   done
 }
 
