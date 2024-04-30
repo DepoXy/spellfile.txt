@@ -140,10 +140,16 @@ compile_spells () {
         echo
         echo "# USAGE: Run this file, then move new words from right to left"
         echo "#        if the new word belongs in the source file on the left"
-        echo "#        - Ignore new words on the left if you haven't copied"
-        echo "#          ${compiled_spells} ${active_spell}"
         echo
-        echo -e $(print_meld_command) '\\\n  "'"${source_spell}"'" \\\n  "'"${spells_sync_executable}"'" &'
+        echo "# CXREF: The source spells were combined into a single file:"
+        echo "#          ${compiled_spells}"
+        echo "#        And new words were identified by comparing against"
+        echo "#        the active Vim spell file:"
+        echo "#          ${active_spell}"
+        echo
+        echo "$(print_meld_command) \\"
+        echo '  "'"${source_spell}"'" \'
+        echo '  <(sed '0,/^✂️$/d' "'"${spells_sync_executable}"'") &'
         echo
         echo "exit 0"
         echo
@@ -152,6 +158,10 @@ compile_spells () {
         echo "# - Run compile-spells again to verify everything captured,"
         echo "#   and this and any similar scripts will have been removed."
         echo
+        echo "✂️"
+        echo "# Copy words to the leftward source:"
+        echo "#   ${source_spell}"
+        echo "# (but do not copy these top three lines)"
         cat "${source_spells_plus_new}"
       ) > "${spells_sync_executable}"
 
