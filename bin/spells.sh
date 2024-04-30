@@ -357,9 +357,16 @@ print_num_unsynced_changes () {
   fi
 
   local n_lines_diff=0
-  n_lines_diff=$( \
-    print_unique_lines "${VIM_SPELL_FILE}" "${compiled_spells}" \
-      | wc -l)
+
+  if [ "$(realpath -- "${VIM_SPELL_FILE}")" = \
+    "$(realpath -- "${homeish_path}/${VIM_SPELL_PATH}")" ] \
+  ; then
+    n_lines_diff=$( \
+      print_unique_lines "${VIM_SPELL_FILE}" "${compiled_spells}" \
+        | wc -l)
+  else
+    >&2 echo "BWARE: Skipping non-canonical spell file compare"
+  fi
 
   printf "%s" "${n_lines_diff}"
 }
