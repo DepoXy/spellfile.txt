@@ -74,10 +74,10 @@ compile_spells () {
     #   spell file is empty. This happens when user is standing up a new
     #   Vim install, and after this script creates the --compiled file,
     #   the caller can copy that to active_spell and commit it.
-    local unpub_cnt
-    unpub_cnt=$(print_unique_lines "${active_spell}" "${compiled_spells}" -1 | wc -l)
+    local n_uniq_src_spells
+    n_uniq_src_spells=$(print_unique_lines "${active_spell}" "${compiled_spells}" -1 | wc -l)
 
-    if [ ${unpub_cnt} -gt 0 ]; then
+    if [ ${n_uniq_src_spells} -gt 0 ]; then
       >&2 echo
       >&2 echo "BWARE: Unpublished spells found. Publish them, then try again. E.g.,"
       >&2 echo
