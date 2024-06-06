@@ -74,6 +74,8 @@ compile_spells () {
     #   spell file is empty. This happens when user is standing up a new
     #   Vim install, and after this script creates the --compiled file,
     #   the caller can copy that to active_spell and commit it.
+    # - Add "-1", some `comm -3 -1` called, i.e., show only lines
+    #   unique to rhs: ${compiled_spells}.
     local n_uniq_src_spells
     n_uniq_src_spells=$(print_unique_lines "${active_spell}" "${compiled_spells}" -1 | wc -l)
 
@@ -396,9 +398,12 @@ print_num_unsynced_changes () {
 print_unique_lines () {
   local spell1="$1"
   local spell2="$2"
-  local suppress="$3"
+  shift 2
+  # Suppress common (matching) lines "-3" by default.
+  # - Add "-1" to suppress lines unique to ${spell1}
+  #   and/or "-2" to suppress lines unique to ${spell2}.
 
-  comm -3 ${suppress} \
+  comm -3 $@ \
     <(cat "${spell1}" | sort) \
     <(cat "${spell2}" | sort) \
   | sed 's/^\s\+//' \
