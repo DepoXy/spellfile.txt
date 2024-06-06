@@ -80,13 +80,53 @@ compile_spells () {
     n_uniq_src_spells=$(print_unique_lines "${active_spell}" "${compiled_spells}" -1 | wc -l)
 
     if [ ${n_uniq_src_spells} -gt 0 ]; then
-      >&2 echo
-      >&2 echo "BWARE: Unpublished spells found. Publish them, then try again. E.g.,"
-      >&2 echo
-      >&2 echo "     $(fg_hotpink)meld$(attr_reset) \\"
-      >&2 echo "       $(fg_hotpink)\"${active_spell}\" \\$(attr_reset)"
-      >&2 echo "       $(fg_hotpink)\"${compiled_spells}\" &$(attr_reset)"
-      >&2 echo
+      # The compiled_spells file has unique lines.
+      # - Check if active_spell does, because, if not, we can assume user
+      #   updated their source spell files not through Vim, and it's okay
+      #   to rebuild Vim's .add file. (I.e., user has not added new words
+      #   to the .add file that we might clobber.)
+      local n_uniq_vim_spells
+      n_uniq_vim_spells=$(print_unique_lines "${active_spell}" "${compiled_spells}" -2 | wc -l)
+
+      if [ ${n_uniq_vim_spells} -gt 0 ]; then
+        >&2 echo
+        >&2 echo "BWARE: New Vim spells found. Resolve the issue, then try again. E.g.,"
+        >&2 echo
+        >&2 echo "     $(fg_hotpink)meld$(attr_reset) \\"
+        >&2 echo "       $(fg_hotpink)\"${active_spell}\" \\$(attr_reset)"
+        >&2 echo "       $(fg_hotpink)\"${compiled_spells}\" &$(attr_reset)"
+        >&2 echo
+      else
+        # CXREF:
+        #   https://github.com/landonb/vim-mkspell-when-stale#🥖
+        #     ~/.vim/pack/landonb/start/vim-mkspell-when-stale/autoload/mkspell_when_stale.vim
+        #       redir @a
+        #       silent execute 'mkspell! ' . fnameescape(vocab)
+        #       redir END
+        vim_generate_spellfile () {
+          # Create '.spl' file, e.g.,
+          #   :execute 'mkspell! ~/path/to/.vim/spell/en.utf-8.add'
+          # will generate the spell file:
+          #   ~/path/to/.vim/spell/en.utf-8.add.spl
+          vim -c "execute 'mkspell! ${active_spell}'" -c q
+        }
+
+        command cp -- "${compiled_spells}" "${active_spell}"
+
+        vim_generate_spellfile
+
+        log_user_alert () {
+          >&2 echo
+          >&2 echo "ALERT: Replaced .add and .spl files after source changes detected:"
+          >&2 echo
+          ( ls -la "$(realpath -- "${active_spell}")" ;
+            ls -la "$(realpath -- "${active_spell}.spl")" ;
+          ) | sed "s/^/  $(fg_hotpink)/" | >&2 sed "s/$/$(attr_reset)/"
+          # Too boring:
+          #  ) | >&2 sed 's/^/  /'
+        }
+        log_user_alert
+      fi
     fi
   else
     cleanup_only=true
