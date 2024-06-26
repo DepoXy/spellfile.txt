@@ -175,7 +175,8 @@ compile_spells () {
       command rm -f -- "${spells_sync_executable}"
     else
       >&2 echo "✗ Creating sync script: ${spells_sync_executable}"
-      >&2 echo "    diff \"${sorted_source}\" \"${source_spells_plus_new}\""
+      >&2 echo "    diff \"${sorted_source}\" \\"
+      >&2 echo "      \"${source_spells_plus_new}\""
 
       (
         echo "#!/usr/bin/env bash"
