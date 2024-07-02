@@ -126,7 +126,8 @@ compile_spells () {
 
           >&2 echo "vim -c \"execute 'mkspell! ${active_spell}'\" -c q"
 
-          vim -c "execute 'mkspell! ${active_spell}'" -c q
+          # Redirect stderr, lest: Vim: Warning: Output is not to a terminal
+          vim -c "execute 'mkspell! ${active_spell}'" -c q 2> /dev/null
 
           log_trace_ls_spell_files "After"
         }
