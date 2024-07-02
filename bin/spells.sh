@@ -437,9 +437,7 @@ print_num_unsynced_changes () {
 
   local n_lines_diff=0
 
-  if [ "$(realpath -- "${VIM_SPELL_FILE}")" = \
-    "$(realpath -- "${homeish_path}/${VIM_SPELL_PATH}")" ] \
-  ; then
+  if is_canonical_spell_file "${homeish_path}"; then
     n_lines_diff=$( \
       print_unique_lines "${VIM_SPELL_FILE}" "${compiled_spells}" \
         | wc -l)
@@ -449,6 +447,14 @@ print_num_unsynced_changes () {
   fi
 
   printf "%s" "${n_lines_diff}"
+}
+
+  # Check if ~/.vim/spell/en.utf-8.add -> local project file
+is_canonical_spell_file () {
+  local homeish_path="$1"
+  
+  test "$(realpath -- "${VIM_SPELL_FILE}")" = \
+    "$(realpath -- "${homeish_path}/${VIM_SPELL_PATH}")"
 }
 
 # ***
