@@ -30,6 +30,8 @@ init_spellssh () {
   SPF_BASE_DIR="$(dirname -- "$(realpath -- "$0")")/.."
   # E.g., /path/to/spellfile.txt/spell/en.utf-8.add
   SPF_SPELL_FILE="${SPF_BASE_DIR}/${VIM_SPELL_PATH}${SPELLS_PERSONAL_SUFFIX}"
+
+  SPELLS_VERBOSE="${SPELLS_VERBOSE:-false}"
 }
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
@@ -97,6 +99,17 @@ compile_spells () {
         >&2 echo "       $(fg_hotpink)\"${compiled_spells}\" &$(attr_reset)"
         >&2 echo
       else
+        log_trace_ls_spell_files ()  {
+          local when="$1"
+
+          ${SPELLS_VERBOSE:-false} || return 0
+
+          >&2 echo "${when} Vim mkspell:"
+          >&2 echo "  $ ll ${active_spell}*"
+          command ls -la ${active_spell}* | >&2 sed 's/^/  /'
+          >&2 echo
+        }
+
         # CXREF:
         #   https://github.com/landonb/vim-mkspell-when-stale#🥖
         #     ~/.vim/pack/landonb/start/vim-mkspell-when-stale/autoload/mkspell_when_stale.vim
@@ -108,14 +121,26 @@ compile_spells () {
           #   :execute 'mkspell! ~/path/to/.vim/spell/en.utf-8.add'
           # will generate the spell file:
           #   ~/path/to/.vim/spell/en.utf-8.add.spl
+
+          log_trace_ls_spell_files "Before"
+
+          >&2 echo "vim -c \"execute 'mkspell! ${active_spell}'\" -c q"
+
           vim -c "execute 'mkspell! ${active_spell}'" -c q
+
+          log_trace_ls_spell_files "After"
         }
+
+        >&2 echo "command cp -- \"${compiled_spells}\" \\"
+        >&2 echo "  \"${active_spell}\""
 
         command cp -- "${compiled_spells}" "${active_spell}"
 
         vim_generate_spellfile
 
         log_user_alert () {
+          ${SPELLS_VERBOSE:-false} || return 0
+
           >&2 echo
           >&2 echo "ALERT: Replaced .add and .spl files after source changes detected:"
           >&2 echo
@@ -174,9 +199,11 @@ compile_spells () {
 
       command rm -f -- "${spells_sync_executable}"
     else
-      >&2 echo "✗ Creating sync script: ${spells_sync_executable}"
-      >&2 echo "    diff \"${sorted_source}\" \\"
-      >&2 echo "      \"${source_spells_plus_new}\""
+      if ${SPELLS_VERBOSE:-false}; then
+        >&2 echo "✗ Creating sync script: ${spells_sync_executable}"
+        >&2 echo "    diff \"${sorted_source}\" \\"
+        >&2 echo "      \"${source_spells_plus_new}\""
+      fi
 
       (
         echo "#!/usr/bin/env bash"
@@ -416,8 +443,9 @@ print_num_unsynced_changes () {
     n_lines_diff=$( \
       print_unique_lines "${VIM_SPELL_FILE}" "${compiled_spells}" \
         | wc -l)
-  else
+  elif ${SPELLS_VERBOSE:-false}; then
     >&2 echo "BWARE: Skipping non-canonical spell file compare"
+    >&2 echo "- I.e., not processing ~/${VIM_SPELL_PATH}"
   fi
 
   printf "%s" "${n_lines_diff}"
