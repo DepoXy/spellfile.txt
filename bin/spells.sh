@@ -152,6 +152,12 @@ compile_spells () {
           #  ) | >&2 sed 's/^/  /'
         }
         log_user_alert
+
+        if command rm -- "${active_spell}.spl" 2> /dev/null; then
+          >&2 echo "✗ Removed intermediate .spl (not ~/.vim's): ${active_spell}.spl"
+        else
+          >&2 echo "GAFFE: No .spl file at: ${active_spell}.spl"
+        fi
       fi
     fi
   else
