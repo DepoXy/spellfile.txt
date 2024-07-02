@@ -65,6 +65,10 @@ compile_spells () {
 
   local cleanup_only=false
 
+  if ! is_canonical_spell_file "${homeish_path}"; then
+    cleanup_only=true
+  fi
+
   if [ -s "${active_spell}" ] \
     && ! diff -q "${compiled_spells}" "${active_spell}" > /dev/null \
   ; then
