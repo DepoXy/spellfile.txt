@@ -397,6 +397,42 @@ print_meld_command () {
       || [ -d "/var/lib/flatpak/app/org.gnome.meld" ]
   }
 
+  # ***
+
+  # Aka ${HOMEBREW_PREFIX}
+  local brew_home="/opt/homebrew"
+  # Otherwise on Intel Macs it's under /usr/local.
+  [ -d "${brew_home}" ] || brew_home="/usr/local"
+
+  local user_meld="${DOPP_KIT:-${HOME}/.kit}/py/meld"
+
+  # USYNC: DEPOXY_PYENV_PYVERS
+  local py_vers="${DEPOXY_MELD_PYVERS:-${DEPOXY_PYENV_PYVERS:-3.12.1}}"
+  local py_path="/opt/homebrew/lib/python${py_vers%.*}/site-packages"
+
+  is_meld_sources_installed () {
+    [ -x "${user_meld}/bin/meld" ] \
+      && [ -x "${brew_home}/bin/meld" ] \
+      && [ -d "${py_path}/meld" ]
+  }
+
+  # ALTLY: Because of #!/usr/bin/python3 in brew executable,
+  # we could instead call brew module via python3 directly:
+  #   PYTHONPATH="${py_path}" python3 ${brew_home}/bin/meld "$@"
+  print_meld_sources () {
+    # Avoid same-named Homebrew executable with `command` preflight.
+    echo 'test "$(command -v deactivate)" = "deactivate" && deactivate'
+    echo 'eval "$(pyenv init -)"'
+
+    # Shouldn't be necessary/wouldn't make sense here:
+    #   pyenv install -s ${py_vers}
+    echo "pyenv shell ${py_vers}"
+
+    printf "%s" "PYTHONPATH=\"${py_path}\" ${user_meld}/bin/meld"
+  }
+
+  # ***
+
   is_meld_application_installed () {
     [ -d "/Applications/Meld.app/" ]
   }
@@ -404,9 +440,12 @@ print_meld_command () {
   # ***
 
   # Prefer flatpak meld (Debian)
+  # or Meld from sources (macOS).
 
   if is_meld_flatpak_installed; then
     printf "%s" "flatpak run org.gnome.meld"
+  elif is_meld_sources_installed; then
+    print_meld_sources
   elif is_meld_application_installed; then
     # ALTLY: `open` could work, but fails on relative paths.
     #   open /Applications/Meld.app/ --args "$@"
