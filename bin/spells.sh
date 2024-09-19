@@ -383,23 +383,31 @@ print_compiled_spells_path () {
   printf "%s" "${compiled_spells}"
 }
 
-# ***
+# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
 print_meld_command () {
-  # Prefer flatpak meld.
-  # - If you want your own meld, uninstall flatpak's.
-
-  # - SAVVY: Just check dir., as flatpak-info is slower. E.g., not:
+  # SAVVY: Just check dir., as flatpak-info is slower. E.g., not:
   #
-  #     if command -v "flatpak" > /dev/null 2>&1; then
-  #       # CXREF: ${HOME}/.local/share/flatpak/app/org.gnome.meld
-  #       if flatpak info org.gnome.meld > /dev/null 2>&1; then
-  #         ...
-  if [ -d "${HOME}/.local/share/flatpak/app/org.gnome.meld" ] \
-    || [ -d "/var/lib/flatpak/app/org.gnome.meld" ] \
-  ; then
+  #   if command -v "flatpak" > /dev/null 2>&1; then
+  #     # CXREF: ${HOME}/.local/share/flatpak/app/org.gnome.meld
+  #     if flatpak info org.gnome.meld > /dev/null 2>&1; then
+  #       ...
+  is_meld_flatpak_installed () {
+    [ -d "${HOME}/.local/share/flatpak/app/org.gnome.meld" ] \
+      || [ -d "/var/lib/flatpak/app/org.gnome.meld" ]
+  }
+
+  is_meld_application_installed () {
+    [ -d "/Applications/Meld.app/" ]
+  }
+
+  # ***
+
+  # Prefer flatpak meld (Debian)
+
+  if is_meld_flatpak_installed; then
     printf "%s" "flatpak run org.gnome.meld"
-  elif [ -d "/Applications/Meld.app/" ]; then
+  elif is_meld_application_installed; then
     # ALTLY: `open` could work, but fails on relative paths.
     #   open /Applications/Meld.app/ --args "$@"
     printf "%s" "/Applications/Meld.app/Contents/MacOS/Meld"
