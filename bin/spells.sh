@@ -230,7 +230,8 @@ compile_spells () {
         echo
         echo "$(print_meld_command) \\"
         echo '  "'"${source_spell}"'" \'
-        echo '  <(sed '0,/^✂️$/d' "'"${spells_sync_executable}"'") &'
+        echo '  <(sed '0,/^✂️$/d' "'"${spells_sync_executable}"'") \'
+        echo '  2>/dev/null &'
         echo
         echo "exit 0"
         echo
