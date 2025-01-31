@@ -27,6 +27,13 @@ init_spellssh () {
   # E.g., ~/.vim/spell/en.utf-8.add
   VIM_SPELL_FILE="${HOME}/${VIM_SPELL_PATH}"
 
+  # E.g., .vim/spell/en.utf-8.add
+  NVIM_SPELL_DIR="nvim/spell"
+  # E.g., nvim/spell/en.utf-8.add
+  NVIM_SPELL_PATH="${NVIM_SPELL_DIR}/${SPELL_NAME}"
+  # E.g., ~/.config/nvim/spell/en.utf-8.add
+  NVIM_SPELL_FILE="${XDG_CONFIG_HOME:-${HOME}/.config}/${NVIM_SPELL_PATH}/${SPELL_PATH}"
+
   # E.g., /path/to/spellfile.txt
   SPF_BASE_DIR="$(dirname -- "$(realpath -- "$0")")/.."
   # E.g., /path/to/spellfile.txt/.vim/spell/en.utf-8.add
@@ -306,9 +313,12 @@ verify_and_print_spell_paths () {
     # >&2 echo "?: ${probe}"
     [ -n "${probe}" ] || continue
 
-    # If path not the spell file, it's to a spell-ish, vim-ish or home-ish dir.
+    # If path not the spell file, it's to a spell-ish, (n)vim-ish or home-ish dir.
+    # - Meh: Should we alert if more than one file exists?
+    #   - Currently we pick first and don't check if others exists.
     [ -f "${probe}" ] || probe="${path}/${SPELL_NAME}${SPELLS_PERSONAL_SUFFIX}"
     [ -f "${probe}" ] || probe="${path}/${SPELL_PATH}${SPELLS_PERSONAL_SUFFIX}"
+    [ -f "${probe}" ] || probe="${path}/${NVIM_SPELL_PATH}${SPELLS_PERSONAL_SUFFIX}"
     [ -f "${probe}" ] || probe="${path}/${VIM_SPELL_PATH}${SPELLS_PERSONAL_SUFFIX}"
 
     [ -f "${probe}" ] || continue
@@ -401,11 +411,14 @@ print_discovered_spell_dir () {
   local spell_dir=""
 
   if [ -n "${homeish_path}" ]; then
-    if [ -d "${homeish_path}/${VIM_SPELL_DIR}" ]; then
+    if [ -d "${homeish_path}/${NVIM_SPELL_DIR}" ]; then
+      spell_dir="${homeish_path}/${NVIM_SPELL_DIR}"
+    elif [ -d "${homeish_path}/${VIM_SPELL_DIR}" ]; then
       spell_dir="${homeish_path}/${VIM_SPELL_DIR}"
     else
       >&2 echo "ERROR: Homeish path missing expected spell subdir"
       >&2 echo "- Expected to find one of:"
+      >&2 echo "    ${homeish_path}/${NVIM_SPELL_DIR}"
       >&2 echo "    ${homeish_path}/${VIM_SPELL_DIR}"
 
       exit_1
@@ -561,17 +574,33 @@ print_vim_spell_file () {
 
   if [ ! -f "${user_spell_file}" ]; then
     user_spell_file="${VIM_SPELL_FILE}"
+  elif [ -f "${VIM_SPELL_FILE}" ]; then
+    >&2 echo "ALERT: spellfile.txt detects two canonical spell files"
+    >&2 echo "- Both of these files exist:"
+    >&2 echo "    ${NVIM_SPELL_FILE}"
+    >&2 echo "    ${VIM_SPELL_FILE}"
+    >&2 echo "- spellfile.txt picked:"
+    >&2 echo "    ${user_spell_file}"
   fi
 
   printf "%s" "${user_spell_file}"
 }
 
 # Check if ~/.vim/spell/en.utf-8.add -> local project file
+#    or if ~/.config/nvim/spell/en.utf-8.add -> local project file
 is_canonical_spell_file () {
   local homeish_path="$1"
-  
-  test "$(realpath -- "${VIM_SPELL_FILE}")" = \
-    "$(realpath -- "${homeish_path}/${VIM_SPELL_PATH}")"
+
+  local user_spell_file
+  user_spell_file="$(print_vim_spell_file)"
+
+  local local_spell_base
+  local_spell_base="$(print_discovered_spell_base "${homeish_path}")" \
+    || exit_1
+
+  test \
+    "$(realpath -- "${user_spell_file}")" = \
+    "$(realpath -- "${local_spell_base}")"
 }
 
 # ***
