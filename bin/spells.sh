@@ -21,8 +21,9 @@ init_spellssh () {
   SPELL_PATH="spell/${SPELL_NAME}"
 
   # E.g., .vim/spell/en.utf-8.add
-  VIM_SPELL_PATH=".vim/${SPELL_PATH}"
-
+  VIM_SPELL_DIR=".vim/spell"
+  # E.g., .vim/spell/en.utf-8.add
+  VIM_SPELL_PATH="${VIM_SPELL_DIR}/${SPELL_NAME}"
   # E.g., ~/.vim/spell/en.utf-8.add
   VIM_SPELL_FILE="${HOME}/${VIM_SPELL_PATH}"
 
@@ -363,25 +364,62 @@ merge_spells_verified () {
 print_compiled_spells_path () {
   local homeish_path="$1"
 
-  local vimish_path
-  if [ -n "${homeish_path}" ]; then
-    vimish_path="${homeish_path}/.vim"
-  else
-    vimish_path="${SPF_BASE_DIR}"
-  fi
+  local spell_base
+  spell_base="$(print_discovered_spell_base "${homeish_path}")"
 
-  local spellish_path="${vimish_path}/${SPELL_PATH}"
-  if [ ! -d "$(dirname -- "${spellisfh_path}")" ]; then
-    >&2 echo "ERROR: Homeish path missing expected spell subdir:"
+  # E.g., path/to/home/.vim/spell/en.utf-8.add--compiled
+  local compiled_spells="${spell_base}${SPELLS_COMPILED_SUFFIX}"
+
+  printf "%s" "${compiled_spells}"
+}
+
+print_discovered_spell_base () {
+  local homeish_path="$1"
+
+  local spell_dir=""
+  # E.g., path/to/home/.vim/spell
+  spell_dir="$(print_discovered_spell_dir "${homeish_path}")"
+
+  # E.g., path/to/home/.vim/spell/en.utf-8.add
+  local spellish_path="${spell_dir}/${SPELL_NAME}"
+
+  if [ ! -f "${spellish_path}" ]; then
+    >&2 echo "ERROR: Homeish path missing expected base spell file:"
     >&2 echo "  ${spellish_path}"
 
     return 1
   fi
 
-  # E.g., path/to/home/.vim/spell/en.utf-8.add--compiled
-  local compiled_spells="${spellish_path}${SPELLS_COMPILED_SUFFIX}"
+  printf "%s" "${spellish_path}"
+}
 
-  printf "%s" "${compiled_spells}"
+print_discovered_spell_dir () {
+  local homeish_path="$1"
+  
+  local spell_dir=""
+
+  if [ -n "${homeish_path}" ]; then
+    if [ -d "${homeish_path}/${VIM_SPELL_DIR}" ]; then
+      spell_dir="${homeish_path}/${VIM_SPELL_DIR}"
+    else
+      >&2 echo "ERROR: Homeish path missing expected spell subdir"
+      >&2 echo "- Expected to find one of:"
+      >&2 echo "    ${homeish_path}/${VIM_SPELL_DIR}"
+
+      return 1
+    fi
+  else
+    spell_dir="${SPF_BASE_DIR}/spell"
+
+    if [ ! -d "${spell_dir}" ]; then
+      >&2 echo "GAFFE: spellfile.txt path missing expected spell subdir:"
+      >&2 echo "  ${spell_dir}"
+
+      return 1
+    fi
+  fi
+
+  printf "%s" "${spell_dir}"
 }
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
