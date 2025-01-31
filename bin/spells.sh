@@ -486,10 +486,15 @@ print_num_unsynced_changes () {
     return 1
   fi
 
-  if [ ! -f "${VIM_SPELL_FILE}" ]; then
-    >&2 echo "ERROR: Missing Vim spell file!"
+  local vim_spell_file
+  vim_spell_file="$(print_vim_spell_file)"
+
+  if [ ! -f "${vim_spell_file}" ]; then
+    # Now that's a doozie...
+    >&2 echo "ERROR: Missing spell file"
+    >&2 echo "- Please verify one of these paths exists:"
+    >&2 echo "    ${NVIM_SPELL_FILE}"
     >&2 echo "    ${VIM_SPELL_FILE}"
-    >&2 echo "- Now that's a doozie..."
 
     return 1
   fi
@@ -498,17 +503,29 @@ print_num_unsynced_changes () {
 
   if is_canonical_spell_file "${homeish_path}"; then
     n_lines_diff=$( \
-      print_unique_lines "${VIM_SPELL_FILE}" "${compiled_spells}" \
+      print_unique_lines "${vim_spell_file}" "${compiled_spells}" \
         | wc -l)
   elif ${SPELLS_VERBOSE:-false}; then
     >&2 echo "BWARE: Skipping non-canonical spell file compare"
-    >&2 echo "- I.e., not processing ~/${VIM_SPELL_PATH}"
+    >&2 echo "- I.e., not processing ${vim_spell_file}"
   fi
 
   printf "%s" "${n_lines_diff}"
 }
 
-  # Check if ~/.vim/spell/en.utf-8.add -> local project file
+print_vim_spell_file () {
+  local user_spell_file=""
+
+  user_spell_file="${NVIM_SPELL_FILE}"
+
+  if [ ! -f "${user_spell_file}" ]; then
+    user_spell_file="${VIM_SPELL_FILE}"
+  fi
+
+  printf "%s" "${user_spell_file}"
+}
+
+# Check if ~/.vim/spell/en.utf-8.add -> local project file
 is_canonical_spell_file () {
   local homeish_path="$1"
   
