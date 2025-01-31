@@ -42,9 +42,10 @@ compile_spells () {
   shift
 
   local compiled_spells
-  compiled_spells="$(print_compiled_spells_path "${homeish_path}")"
+  compiled_spells="$(print_compiled_spells_path "${homeish_path}")" \
+    || exit_1
 
-  [ $? -eq 0 ] && [ -n "${compiled_spells}" ] || return 1
+  [ $? -eq 0 ] && [ -n "${compiled_spells}" ] || exit_1
 
   local spell_paths
   local echoerr_spell_paths=${SPF_PRINT_SPELLS:-true}
@@ -55,7 +56,7 @@ compile_spells () {
 
   local n_spells=$#
 
-  [ ${n_spells} -gt 0 ] || return 1
+  [ ${n_spells} -gt 0 ] || exit_1
 
   merge_spells_verified "$@" > "${compiled_spells}"
 
@@ -274,7 +275,7 @@ find_and_print_spell_paths () {
   if [ -z "${spell_paths}" ]; then
     >&2 echo "ERROR: No spell files found"
 
-    return 1
+    exit_1
   fi
 
   local n_spellfiles=$(echo "${spell_paths}" | wc -l)
@@ -365,7 +366,8 @@ print_compiled_spells_path () {
   local homeish_path="$1"
 
   local spell_base
-  spell_base="$(print_discovered_spell_base "${homeish_path}")"
+  spell_base="$(print_discovered_spell_base "${homeish_path}")" \
+    || return 1
 
   # E.g., path/to/home/.vim/spell/en.utf-8.add--compiled
   local compiled_spells="${spell_base}${SPELLS_COMPILED_SUFFIX}"
@@ -387,7 +389,7 @@ print_discovered_spell_base () {
     >&2 echo "ERROR: Homeish path missing expected base spell file:"
     >&2 echo "  ${spellish_path}"
 
-    return 1
+    exit_1
   fi
 
   printf "%s" "${spellish_path}"
@@ -406,7 +408,7 @@ print_discovered_spell_dir () {
       >&2 echo "- Expected to find one of:"
       >&2 echo "    ${homeish_path}/${VIM_SPELL_DIR}"
 
-      return 1
+      exit_1
     fi
   else
     spell_dir="${SPF_BASE_DIR}/spell"
@@ -415,7 +417,7 @@ print_discovered_spell_dir () {
       >&2 echo "GAFFE: spellfile.txt path missing expected spell subdir:"
       >&2 echo "  ${spell_dir}"
 
-      return 1
+      exit_1
     fi
   fi
 
@@ -499,7 +501,7 @@ print_meld_command () {
   else
     >&2 echo "ERROR: Cannot locate meld (via flatpak or on PATH)"
 
-    exit 1
+    exit_1
   fi
 }
 
@@ -512,16 +514,17 @@ print_num_unsynced_changes () {
   local homeish_path="$1"
 
   local compiled_spells
-  compiled_spells="$(print_compiled_spells_path "${homeish_path}")"
+  compiled_spells="$(print_compiled_spells_path "${homeish_path}")" \
+    || exit_1
 
-  [ $? -eq 0 ] && [ -n "${compiled_spells}" ] || return 1
+  [ $? -eq 0 ] && [ -n "${compiled_spells}" ] || exit_1
 
   if [ ! -f "${compiled_spells}" ]; then
     >&2 echo "ERROR: Compiled spells not found:"
     >&2 echo "    ${spellish_path}"
     >&2 echo "- Hint: Have you run compile-spells yet?"
 
-    return 1
+    exit_1
   fi
 
   local vim_spell_file
@@ -534,7 +537,7 @@ print_num_unsynced_changes () {
     >&2 echo "    ${NVIM_SPELL_FILE}"
     >&2 echo "    ${VIM_SPELL_FILE}"
 
-    return 1
+    exit_1
   fi
 
   local n_lines_diff=0
@@ -623,7 +626,7 @@ check_deps () {
   check_dep_mktemp || failed=true
   check_dep_realpath || failed=true
 
-  ${failed} && exit 1 || true
+  ${failed} && exit_1 || true
 }
 
 check_dep_mktemp () {
@@ -679,7 +682,7 @@ dispatch_command () {
     *)
       >&2 echo "ERROR: Unrecognized command: “${command}”"
 
-      exit 1
+      exit_1
       ;;
   esac
 }
