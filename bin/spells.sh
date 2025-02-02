@@ -125,7 +125,7 @@ compile_spells () {
 
         # CXREF:
         #   https://github.com/landonb/vim-mkspell-when-stale#🥖
-        #     ~/.vim/pack/landonb/start/vim-mkspell-when-stale/autoload/mkspell_when_stale.vim
+        #     ~/.kit/nvim/landonb/start/vim-mkspell-when-stale/autoload/mkspell_when_stale.vim
         #       redir @a
         #       silent execute 'mkspell! ' . fnameescape(vocab)
         #       redir END
