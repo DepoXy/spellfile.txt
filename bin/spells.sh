@@ -28,7 +28,7 @@ init_spellssh() {
   VIM_SPELL_FILE="${HOME}/${VIM_SPELL_PATH}"
 
   # E.g., nvim/spell
-  NVIM_SPELL_DIR="nvim/spell"
+  NVIM_SPELL_DIR="${NVIM_APPNAME:-nvim}/spell"
   # E.g., nvim/spell/en.utf-8.add
   NVIM_SPELL_PATH="${NVIM_SPELL_DIR}/${SPELL_NAME}"
   # E.g., ~/.config/nvim/spell/en.utf-8.add
