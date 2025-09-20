@@ -20,14 +20,14 @@ init_spellssh() {
   # E.g., spell/en.utf-8.add
   SPELL_PATH="spell/${SPELL_NAME}"
 
-  # E.g., .vim/spell/en.utf-8.add
+  # E.g., .vim/spell
   VIM_SPELL_DIR=".vim/spell"
   # E.g., .vim/spell/en.utf-8.add
   VIM_SPELL_PATH="${VIM_SPELL_DIR}/${SPELL_NAME}"
   # E.g., ~/.vim/spell/en.utf-8.add
   VIM_SPELL_FILE="${HOME}/${VIM_SPELL_PATH}"
 
-  # E.g., .vim/spell/en.utf-8.add
+  # E.g., nvim/spell
   NVIM_SPELL_DIR="nvim/spell"
   # E.g., nvim/spell/en.utf-8.add
   NVIM_SPELL_PATH="${NVIM_SPELL_DIR}/${SPELL_NAME}"
