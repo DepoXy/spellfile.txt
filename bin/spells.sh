@@ -20,6 +20,8 @@ init_spellssh() {
   # E.g., spell/en.utf-8.add
   SPELL_PATH="spell/${SPELL_NAME}"
 
+  # SAVVY: VIM_SPELL_* only used if NVIM_SPELL_* not found first.
+  #
   # E.g., .vim/spell
   VIM_SPELL_DIR=".vim/spell"
   # E.g., .vim/spell/en.utf-8.add
