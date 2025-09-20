@@ -8,7 +8,7 @@
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
-init_spellssh () {
+init_spellssh() {
   SPELL_NAME="en.utf-8.add"
   # E.g., --personal
   SPELLS_PERSONAL_SUFFIX="${SPELLS_PERSONAL_SUFFIX:---personal}"
@@ -44,13 +44,13 @@ init_spellssh () {
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
-compile_spells () {
+compile_spells() {
   local homeish_path="$1"
   shift
 
   local compiled_spells
-  compiled_spells="$(print_compiled_spells_path "${homeish_path}")" \
-    || exit_1
+  compiled_spells="$(print_compiled_spells_path "${homeish_path}")" ||
+    exit_1
 
   [ $? -eq 0 ] && [ -n "${compiled_spells}" ] || exit_1
 
@@ -65,7 +65,7 @@ compile_spells () {
 
   [ ${n_spells} -gt 0 ] || exit_1
 
-  merge_spells_verified "$@" > "${compiled_spells}"
+  merge_spells_verified "$@" >"${compiled_spells}"
 
   # ***
 
@@ -78,9 +78,9 @@ compile_spells () {
     cleanup_only=true
   fi
 
-  if [ -s "${active_spell}" ] \
-    && ! diff -q "${compiled_spells}" "${active_spell}" > /dev/null \
-  ; then
+  if [ -s "${active_spell}" ] &&
+    ! diff -q "${compiled_spells}" "${active_spell}" >/dev/null \
+    ; then
     # Normally --compiled falls behind active_spell, because when user adds
     # dictionary words in Vim, Vim updates active_spell.
     # - If --compiled has words, means user needs to update active_spell
@@ -112,7 +112,7 @@ compile_spells () {
         >&2 echo "       $(fg_hotpink)\"${compiled_spells}\" &$(attr_reset)"
         >&2 echo
       else
-        log_trace_ls_spell_files ()  {
+        log_trace_ls_spell_files() {
           local when="$1"
 
           ${SPELLS_VERBOSE:-false} || return 0
@@ -129,7 +129,7 @@ compile_spells () {
         #       redir @a
         #       silent execute 'mkspell! ' . fnameescape(vocab)
         #       redir END
-        vim_generate_spellfile () {
+        vim_generate_spellfile() {
           # Create '.spl' file, e.g.,
           #   :execute 'mkspell! ~/path/to/.vim/spell/en.utf-8.add'
           # will generate the spell file:
@@ -140,7 +140,7 @@ compile_spells () {
           >&2 echo "vim -c \"execute 'mkspell! ${active_spell}'\" -c q"
 
           # Redirect stderr, lest: Vim: Warning: Output is not to a terminal
-          vim -c "execute 'mkspell! ${active_spell}'" -c q 2> /dev/null
+          vim -c "execute 'mkspell! ${active_spell}'" -c q 2>/dev/null
 
           log_trace_ls_spell_files "After"
         }
@@ -152,21 +152,22 @@ compile_spells () {
 
         vim_generate_spellfile
 
-        log_user_alert () {
+        log_user_alert() {
           ${SPELLS_VERBOSE:-false} || return 0
 
           >&2 echo
           >&2 echo "ALERT: Replaced .add and .spl files after source changes detected:"
           >&2 echo
-          ( ls -la "$(realpath -- "${active_spell}")" ;
-            ls -la "$(realpath -- "${active_spell}.spl")" ;
+          (
+            ls -la "$(realpath -- "${active_spell}")"
+            ls -la "$(realpath -- "${active_spell}.spl")"
           ) | sed "s/^/  $(fg_hotpink)/" | >&2 sed "s/$/$(attr_reset)/"
           # Too boring:
           #  ) | >&2 sed 's/^/  /'
         }
         log_user_alert
 
-        if command rm -- "${active_spell}.spl" 2> /dev/null; then
+        if command rm -- "${active_spell}.spl" 2>/dev/null; then
           >&2 echo "✗ Removed intermediate .spl (not ~/.vim's): ${active_spell}.spl"
         else
           >&2 echo "GAFFE: No .spl file at: ${active_spell}.spl"
@@ -197,16 +198,16 @@ compile_spells () {
     fi
 
     local omit_spell=${i_spell}
-    merge_spells_verified "$@" > "${spells_without_ispell}"
+    merge_spells_verified "$@" >"${spells_without_ispell}"
 
-    print_unique_lines "${spells_without_ispell}" "${active_spell}" > "${source_spells_plus_new}"
+    print_unique_lines "${spells_without_ispell}" "${active_spell}" >"${source_spells_plus_new}"
 
     command rm -- "${spells_without_ispell}"
 
-    cat "${source_spell}" | special_sort > "${sorted_source}"
+    cat "${source_spell}" | special_sort >"${sorted_source}"
 
     local rm_sorted_source=true
-    if ! diff -q --ignore-blank-lines "${source_spell}" "${sorted_source}" > /dev/null; then
+    if ! diff -q --ignore-blank-lines "${source_spell}" "${sorted_source}" >/dev/null; then
       rm_sorted_source=false
 
       >&2 echo "✗ Source not sorted properly: ${source_spell}"
@@ -214,7 +215,7 @@ compile_spells () {
       >&2 echo "      ${sorted_source}"
     fi
 
-    if diff -q "${sorted_source}" "${source_spells_plus_new}" > /dev/null; then
+    if diff -q "${sorted_source}" "${source_spells_plus_new}" >/dev/null; then
       >&2 echo "✓ Synced: ${source_spell}"
 
       command rm -f -- "${spells_sync_executable}"
@@ -253,13 +254,13 @@ compile_spells () {
         echo "# Copy appropriate words to the leftward source:"
         echo "#   ${source_spell}"
         cat "${source_spells_plus_new}"
-      ) > "${spells_sync_executable}"
+      ) >"${spells_sync_executable}"
 
       chmod +x "${spells_sync_executable}"
     fi
 
     command rm -- "${source_spells_plus_new}"
-    
+
     ! ${rm_sorted_source} || command rm -- "${sorted_source}"
   done
 
@@ -275,7 +276,7 @@ compile_spells () {
 # We'll walk the results instead to de-duplicate, and to honor the
 # caller's original order. But it's not the most elegant code.
 
-find_and_print_spell_paths () {
+find_and_print_spell_paths() {
   local spell_paths
   spell_paths="$(verify_and_print_spell_paths "$@")"
 
@@ -303,7 +304,7 @@ find_and_print_spell_paths () {
   done
 }
 
-verify_and_print_spell_paths () {
+verify_and_print_spell_paths() {
   local n_spells=0
 
   local path
@@ -340,7 +341,7 @@ verify_and_print_spell_paths () {
 #     .vim/spell/en.utf-8.add
 # - The lines from the passed paths and from spellfile.txt/spell/en.utf-8.add
 #   are concatenated, sorted, culled for duplicates, and printed.
-cat_spells () {
+cat_spells() {
   n_spells=0
 
   local path
@@ -356,7 +357,7 @@ cat_spells () {
 }
 
 # Unused fcn.
-merge_spells () {
+merge_spells() {
   local spell_paths
   spell_paths="$(find_and_print_spell_paths "$@")"
 
@@ -366,18 +367,18 @@ merge_spells () {
 }
 
 # Sorta like `cat "$@" | sort`, but overly complicated.
-merge_spells_verified () {
+merge_spells_verified() {
   cat_spells "$@" | special_sort
 }
 
 # ***
 
-print_compiled_spells_path () {
+print_compiled_spells_path() {
   local homeish_path="$1"
 
   local spell_base
-  spell_base="$(print_discovered_spell_base "${homeish_path}")" \
-    || return 1
+  spell_base="$(print_discovered_spell_base "${homeish_path}")" ||
+    return 1
 
   # E.g., path/to/home/.vim/spell/en.utf-8.add--compiled
   local compiled_spells="${spell_base}${SPELLS_COMPILED_SUFFIX}"
@@ -385,7 +386,7 @@ print_compiled_spells_path () {
   printf "%s" "${compiled_spells}"
 }
 
-print_discovered_spell_base () {
+print_discovered_spell_base() {
   local homeish_path="$1"
 
   local spell_dir=""
@@ -405,9 +406,9 @@ print_discovered_spell_base () {
   printf "%s" "${spellish_path}"
 }
 
-print_discovered_spell_dir () {
+print_discovered_spell_dir() {
   local homeish_path="$1"
-  
+
   local spell_dir=""
 
   if [ -n "${homeish_path}" ]; then
@@ -439,16 +440,16 @@ print_discovered_spell_dir () {
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
-print_meld_command () {
+print_meld_command() {
   # SAVVY: Just check dir., as flatpak-info is slower. E.g., not:
   #
   #   if command -v "flatpak" > /dev/null 2>&1; then
   #     # CXREF: ${HOME}/.local/share/flatpak/app/org.gnome.meld
   #     if flatpak info org.gnome.meld > /dev/null 2>&1; then
   #       ...
-  is_meld_flatpak_installed () {
-    [ -d "${HOME}/.local/share/flatpak/app/org.gnome.meld" ] \
-      || [ -d "/var/lib/flatpak/app/org.gnome.meld" ]
+  is_meld_flatpak_installed() {
+    [ -d "${HOME}/.local/share/flatpak/app/org.gnome.meld" ] ||
+      [ -d "/var/lib/flatpak/app/org.gnome.meld" ]
   }
 
   # ***
@@ -464,16 +465,16 @@ print_meld_command () {
   local py_vers="${DEPOXY_MELD_PYVERS:-${DEPOXY_PYENV_PYVERS:-3.12.8}}"
   local py_path="/opt/homebrew/lib/python${py_vers%.*}/site-packages"
 
-  is_meld_sources_installed () {
-    [ -x "${user_meld}/bin/meld" ] \
-      && [ -x "${brew_home}/bin/meld" ] \
-      && [ -d "${py_path}/meld" ]
+  is_meld_sources_installed() {
+    [ -x "${user_meld}/bin/meld" ] &&
+      [ -x "${brew_home}/bin/meld" ] &&
+      [ -d "${py_path}/meld" ]
   }
 
   # ALTLY: Because of #!/usr/bin/python3 in brew executable,
   # we could instead call brew module via python3 directly:
   #   PYTHONPATH="${py_path}" python3 ${brew_home}/bin/meld "$@"
-  print_meld_sources () {
+  print_meld_sources() {
     # Avoid same-named Homebrew executable with `command` preflight.
     echo 'test "$(command -v deactivate)" = "deactivate" && deactivate'
     echo 'eval "$(pyenv init -)"'
@@ -487,7 +488,7 @@ print_meld_command () {
 
   # ***
 
-  is_meld_application_installed () {
+  is_meld_application_installed() {
     [ -d "/Applications/Meld.app/" ]
   }
 
@@ -504,7 +505,7 @@ print_meld_command () {
     # ALTLY: `open` could work, but fails on relative paths.
     #   open /Applications/Meld.app/ --args "$@"
     printf "%s" "/Applications/Meld.app/Contents/MacOS/Meld"
-  elif type -f "meld" > /dev/null 2>&1; then
+  elif type -f "meld" >/dev/null 2>&1; then
     # `type -f` ignores functions, i.e., don't match the function we're in.
 
     # We don't need ourselves again.
@@ -523,12 +524,12 @@ print_meld_command () {
 # Tell user count of spells added since last merged back to sources.
 # - Note vanilla sort, which comm expects, vs. `LC_ALL='C' sort -d`.
 
-print_num_unsynced_changes () {
+print_num_unsynced_changes() {
   local homeish_path="$1"
 
   local compiled_spells
-  compiled_spells="$(print_compiled_spells_path "${homeish_path}")" \
-    || exit_1
+  compiled_spells="$(print_compiled_spells_path "${homeish_path}")" ||
+    exit_1
 
   [ $? -eq 0 ] && [ -n "${compiled_spells}" ] || exit_1
 
@@ -556,9 +557,10 @@ print_num_unsynced_changes () {
   local n_lines_diff=0
 
   if is_canonical_spell_file "${homeish_path}"; then
-    n_lines_diff=$( \
-      print_unique_lines "${vim_spell_file}" "${compiled_spells}" \
-        | wc -l)
+    n_lines_diff=$(
+      print_unique_lines "${vim_spell_file}" "${compiled_spells}" |
+        wc -l
+    )
   elif ${SPELLS_VERBOSE:-false}; then
     >&2 echo "BWARE: Skipping non-canonical spell file compare"
     >&2 echo "- I.e., not processing ${vim_spell_file}"
@@ -567,7 +569,7 @@ print_num_unsynced_changes () {
   printf "%s" "${n_lines_diff}"
 }
 
-print_vim_spell_file () {
+print_vim_spell_file() {
   local user_spell_file=""
 
   user_spell_file="${NVIM_SPELL_FILE}"
@@ -588,15 +590,15 @@ print_vim_spell_file () {
 
 # Check if ~/.vim/spell/en.utf-8.add -> local project file
 #    or if ~/.config/nvim/spell/en.utf-8.add -> local project file
-is_canonical_spell_file () {
+is_canonical_spell_file() {
   local homeish_path="$1"
 
   local user_spell_file
   user_spell_file="$(print_vim_spell_file)"
 
   local local_spell_base
-  local_spell_base="$(print_discovered_spell_base "${homeish_path}")" \
-    || exit_1
+  local_spell_base="$(print_discovered_spell_base "${homeish_path}")" ||
+    exit_1
 
   test \
     "$(realpath -- "${user_spell_file}")" = \
@@ -616,7 +618,7 @@ is_canonical_spell_file () {
 #       <(cat "${spell1}" | sort) \
 #       <(cat "${spell2}" | sort)
 
-print_unique_lines () {
+print_unique_lines() {
   local spell1="$1"
   local spell2="$2"
   shift 2
@@ -626,30 +628,30 @@ print_unique_lines () {
 
   comm -3 $@ \
     <(cat "${spell1}" | sort) \
-    <(cat "${spell2}" | sort) \
-  | sed 's/^\s\+//' \
-  | sed '/^$/d' \
-  | special_sort
+    <(cat "${spell2}" | sort) |
+    sed 's/^\s\+//' |
+    sed '/^$/d' |
+    special_sort
 }
 
 # --dictionary-order: Emoji, A-Z, then a-z.
-special_sort () {
+special_sort() {
   sed '/^$/d' | sort | LC_ALL='C' uniq | LC_ALL='C' sort -d
 }
 
 # ***
 
-fg_hotpink () {
+fg_hotpink() {
   printf "\033[38;2;255;0;135m"
 }
 
-attr_reset () {
+attr_reset() {
   printf "\033[0m"
 }
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
-check_deps () {
+check_deps() {
   local failed=false
 
   check_dep_mktemp || failed=true
@@ -658,88 +660,89 @@ check_deps () {
   ${failed} && exit_1 || true
 }
 
-check_dep_mktemp () {
-  hint_install_deb () { >&2 echo "  sudo apt-get install coreutils"; }
-  hint_install_brew () { >&2 echo "  brew install coreutils"; }
+check_dep_mktemp() {
+  hint_install_deb() { >&2 echo "  sudo apt-get install coreutils"; }
+  hint_install_brew() { >&2 echo "  brew install coreutils"; }
 
   check_dep_with_hint "mktemp"
 }
 
-check_dep_realpath () {
-  ( true \
-    && command -v realpath > /dev/null \
-    && realpath --version 2> /dev/null | head -1 | grep -q -e "(GNU coreutils)" \
+check_dep_realpath() {
+  (
+    true &&
+      command -v realpath >/dev/null &&
+      realpath --version 2>/dev/null | head -1 | grep -q -e "(GNU coreutils)"
   ) && return 0 || true
 
-  hint_install_deb () { >&2 echo "  sudo apt-get install coreutils"; }
-  hint_install_brew () { >&2 echo "  brew install realpath"; }
+  hint_install_deb() { >&2 echo "  sudo apt-get install coreutils"; }
+  hint_install_brew() { >&2 echo "  brew install realpath"; }
 
   check_dep_with_hint 'realpath' 'realpath (from coreutils)' true
 }
 
-check_dep_with_hint () {
+check_dep_with_hint() {
   cmd="$1"
   name="${2:-${cmd}}"
   assume_failed=${3:-false}
 
   if ! ${assume_failed}; then
-    command -v ${cmd} > /dev/null && return 0 || true
+    command -v ${cmd} >/dev/null && return 0 || true
   fi
 
-  os_is_macos () { [ "$(uname)" = 'Darwin' ]; }
+  os_is_macos() { [ "$(uname)" = 'Darwin' ]; }
 
   >&2 echo "ERROR: Requires ‘${cmd}’"
   >&2 echo "- Hint: Install ‘${cmd}’, e.g.:"
-  os_is_macos && hint_install_brew || hint_install_deb 
+  os_is_macos && hint_install_brew || hint_install_deb
 
   return 1
 }
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
-dispatch_command () {
+dispatch_command() {
   local command="$1"
   shift
 
   case ${command} in
-    compile-spells)
-      compile_spells "$@"
-      ;;
-    print-num-unsynced-changes)
-      print_num_unsynced_changes "$@"
-      ;;
-    *)
-      >&2 echo "ERROR: Unrecognized command: “${command}”"
+  compile-spells)
+    compile_spells "$@"
+    ;;
+  print-num-unsynced-changes)
+    print_num_unsynced_changes "$@"
+    ;;
+  *)
+    >&2 echo "ERROR: Unrecognized command: “${command}”"
 
-      exit_1
-      ;;
+    exit_1
+    ;;
   esac
 }
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
-clear_traps () {
+clear_traps() {
   trap - EXIT INT
 }
 
-set_traps () {
+set_traps() {
   trap -- trap_exit EXIT
   trap -- trap_int INT
 }
 
-exit_0 () {
+exit_0() {
   clear_traps
 
   exit 0
 }
 
-exit_1 () {
+exit_1() {
   clear_traps
 
   exit 1
 }
 
-trap_exit () {
+trap_exit() {
   clear_traps
 
   # USAGE: Alert on unexpected error path, so you can add happy path.
@@ -749,7 +752,7 @@ trap_exit () {
   exit 2
 }
 
-trap_int () {
+trap_int() {
   clear_traps
 
   exit 3
@@ -757,7 +760,7 @@ trap_int () {
 
 # ***
 
-main () {
+main() {
   set -e
 
   set_traps
@@ -775,4 +778,3 @@ main () {
 if [ "$0" = "${BASH_SOURCE[0]}" ]; then
   main "$@"
 fi
-
