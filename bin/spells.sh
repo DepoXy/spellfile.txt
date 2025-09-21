@@ -509,9 +509,11 @@ nvim_generate_spellfile() {
 
   # REFER: -Es — Silent (non-interactive) Ex mode, reading stdin as text.
 
-  >&2 echo "nvim -Es -c \"execute 'mkspell! ${NVIM_SPELL_FILE}'\" -c q"
+  >&2 echo "nvim -c \"execute 'mkspell! ${NVIM_SPELL_FILE}'\" -c q --headless"
 
-  nvim -Es -c "execute 'mkspell! ${NVIM_SPELL_FILE}'" -c q
+  # ALTLY:
+  # nvim -Es -c "execute 'mkspell! ${NVIM_SPELL_FILE}'" -c q
+  nvim -c "execute 'mkspell! ${NVIM_SPELL_FILE}'" -c q --headless
 
   log_trace_ls_spell_files "After"
 }
