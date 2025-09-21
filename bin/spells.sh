@@ -410,6 +410,13 @@ print_discovered_spell_base() {
   # E.g., path/to/home/.vim/spell
   spell_dir="$(print_discovered_spell_dir "${homeish_path}")"
 
+  if [ -z "${spell_dir}" ]; then
+    >&2 echo "ERROR: Unable to identify spell dir using homeish path:"
+    >&2 echo "  ${homeish_path}"
+
+    exit_1
+  fi
+
   # E.g., path/to/home/.vim/spell/en.utf-8.add
   local spellish_path="${spell_dir}/${SPELL_NAME}"
 
