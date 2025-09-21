@@ -51,8 +51,8 @@ init_spellssh() {
 
   # E.g., /path/to/spellfile.txt
   SPF_BASE_DIR="$(dirname -- "$(realpath -- "$0")")/.."
-  # E.g., /path/to/spellfile.txt/.vim/spell/en.utf-8.add
-  SPF_SPELL_FILE="${SPF_BASE_DIR}/${VIM_SPELL_PATH}${SPELLS_PERSONAL_SUFFIX}"
+  # E.g., /path/to/spellfile.txt/spell/en.utf-8.add--personal
+  SPF_SPELL_FILE="${SPF_BASE_DIR}/spell/${SPELL_NAME}${SPELLS_PERSONAL_SUFFIX}"
 
   SPELLS_VERBOSE="${SPELLS_VERBOSE:-false}"
 }
