@@ -129,45 +129,12 @@ compile_spells() {
         >&2 echo "       $(fg_hotpink)\"${compiled_spells}\" &$(attr_reset)"
         >&2 echo
       else
-        log_trace_ls_spell_files() {
-          local when="$1"
-
-          ${SPELLS_VERBOSE:-false} || return 0
-
-          >&2 echo "${when} Vim mkspell:"
-          >&2 echo "  $ ll ${active_spell}*"
-          command ls -la ${active_spell}* | >&2 sed 's/^/  /'
-          >&2 echo
-        }
-
-        # CXREF:
-        #   https://github.com/landonb/vim-mkspell-when-stale#🥖
-        #     ~/.kit/nvim/landonb/vim-mkspell-when-stale/autoload/mkspell_when_stale.vim
-        #       redir @a
-        #       silent execute 'mkspell! ' . fnameescape(vocab)
-        #       redir END
-        vim_generate_spellfile() {
-          # Create '.spl' file, e.g.,
-          #   :execute 'mkspell! ~/path/to/.vim/spell/en.utf-8.add'
-          # will generate the spell file:
-          #   ~/path/to/.vim/spell/en.utf-8.add.spl
-
-          log_trace_ls_spell_files "Before"
-
-          >&2 echo "vim -c \"execute 'mkspell! ${active_spell}'\" -c q"
-
-          # Redirect stderr, lest: Vim: Warning: Output is not to a terminal
-          vim -c "execute 'mkspell! ${active_spell}'" -c q 2>/dev/null
-
-          log_trace_ls_spell_files "After"
-        }
-
         >&2 echo "command cp -- \"${compiled_spells}\" \\"
         >&2 echo "  \"${active_spell}\""
 
         command cp -- "${compiled_spells}" "${active_spell}"
 
-        vim_generate_spellfile
+        vim_generate_spellfile "${active_spell}"
 
         log_user_alert() {
           ${SPELLS_VERBOSE:-false} || return 0
@@ -460,6 +427,47 @@ print_discovered_spell_dir() {
   fi
 
   printf "%s" "${spell_dir}"
+}
+
+# ***
+
+# CXREF:
+#   https://github.com/landonb/vim-mkspell-when-stale#🥖
+#     ~/.kit/nvim/landonb/vim-mkspell-when-stale/autoload/mkspell_when_stale.vim
+#       redir @a
+#       silent execute 'mkspell! ' . fnameescape(vocab)
+#       redir END
+
+# Run, e.g.,
+#   vim -c "execute 'mkspell! /home/user/.depoxy/running/home/.kit/nvim/site/spell/en.utf-8.add'" -c q
+
+vim_generate_spellfile() {
+  local active_spell="$1"
+
+  log_trace_ls_spell_files() {
+    local when="$1"
+
+    ${SPELLS_VERBOSE:-false} || return 0
+
+    >&2 echo "${when} Vim mkspell:"
+    >&2 echo "  $ ll ${active_spell}*"
+    command ls -la ${active_spell}* | >&2 sed 's/^/  /'
+    >&2 echo
+  }
+
+  # Create '.spl' file, e.g.,
+  #   :execute 'mkspell! ~/path/to/.vim/spell/en.utf-8.add'
+  # will generate the spell file:
+  #   ~/path/to/.vim/spell/en.utf-8.add.spl
+
+  log_trace_ls_spell_files "Before"
+
+  >&2 echo "vim -c \"execute 'mkspell! ${active_spell}'\" -c q"
+
+  # Redirect stderr, lest: Vim: Warning: Output is not to a terminal
+  vim -c "execute 'mkspell! ${active_spell}'" -c q 2>/dev/null
+
+  log_trace_ls_spell_files "After"
 }
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
