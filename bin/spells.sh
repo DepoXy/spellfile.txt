@@ -34,7 +34,7 @@ init_spellssh() {
   # E.g., nvim/spell/en.utf-8.add
   NVIM_SPELL_PATH="${NVIM_SPELL_DIR}/${SPELL_NAME}"
   # E.g., ~/.config/nvim/spell/en.utf-8.add
-  NVIM_SPELL_FILE="${XDG_CONFIG_HOME:-${HOME}/.config}/${NVIM_SPELL_PATH}/${SPELL_PATH}"
+  NVIM_SPELL_FILE="${XDG_CONFIG_HOME:-${HOME}/.config}/${NVIM_SPELL_PATH}"
 
   # E.g., /path/to/spellfile.txt
   SPF_BASE_DIR="$(dirname -- "$(realpath -- "$0")")/.."
