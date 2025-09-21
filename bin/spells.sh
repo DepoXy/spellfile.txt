@@ -649,12 +649,18 @@ print_vim_spell_file() {
   if [ ! -f "${user_spell_file}" ]; then
     user_spell_file="${VIM_SPELL_FILE}"
   elif [ -f "${VIM_SPELL_FILE}" ]; then
-    >&2 echo "ALERT: spellfile.txt detects two canonical spell files"
-    >&2 echo "- Both of these files exist:"
-    >&2 echo "    ${NVIM_SPELL_FILE}"
-    >&2 echo "    ${VIM_SPELL_FILE}"
-    >&2 echo "- spellfile.txt picked:"
-    >&2 echo "    ${user_spell_file}"
+    if test \
+      "$(realpath -- "${user_spell_file}")" != \
+      "$(realpath -- "${VIM_SPELL_FILE}")" \
+      ; then
+
+      >&2 echo "ALERT: spellfile.txt detects two canonical spell files"
+      >&2 echo "- Both of these files exist:"
+      >&2 echo "    ${NVIM_SPELL_FILE}"
+      >&2 echo "    ${VIM_SPELL_FILE}"
+      >&2 echo "- spellfile.txt picked:"
+      >&2 echo "    ${user_spell_file}"
+    fi
   fi
 
   printf "%s" "${user_spell_file}"
