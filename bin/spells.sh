@@ -61,7 +61,9 @@ init_spellssh() {
 
 compile_spells() {
   local homeish_path="$1"
-  shift
+  if [ $# -gt 0 ]; then
+    shift
+  fi
 
   local compiled_spells
   compiled_spells="$(print_compiled_spells_path "${homeish_path}")" ||
@@ -717,6 +719,12 @@ check_dep_with_hint() {
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
 dispatch_command() {
+  if [ $# -eq 0 ]; then
+    >&2 echo "USAGE: $(basename -- "$0") [compile-spells|print-num-unsynced-changes] <args>"
+
+    exit_1
+  fi
+
   local command="$1"
   shift
 
