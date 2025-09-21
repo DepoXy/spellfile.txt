@@ -134,7 +134,13 @@ compile_spells() {
 
         command cp -- "${compiled_spells}" "${active_spell}"
 
-        vim_generate_spellfile "${active_spell}"
+        if command -v nvim >/dev/null; then
+          # Build ${NVIM_SPELL_FILE}.spl, e.g.,
+          # ~/.local/share/${NVIM_APPNAME:-nvim}/site/spell/en.utf-8.add.spl
+          nvim_generate_spellfile
+        elif command -v vim >/dev/null; then
+          vim_generate_spellfile "${active_spell}"
+        fi
 
         log_user_alert() {
           ${SPELLS_VERBOSE:-false} || return 0
@@ -247,6 +253,12 @@ compile_spells() {
 
     ! ${rm_sorted_source} || command rm -- "${sorted_source}"
   done
+
+  # DEVEL: Uncomment to mkspell! the binary spell file.
+  # - Normally we let Neovim manage the binary file.
+  # - Neovim spell building is *fast*, unlike Vim.
+  #
+  #  nvim_generate_spellfile
 
   echo "${compiled_spells}"
 }
@@ -466,6 +478,34 @@ vim_generate_spellfile() {
 
   # Redirect stderr, lest: Vim: Warning: Output is not to a terminal
   vim -c "execute 'mkspell! ${active_spell}'" -c q 2>/dev/null
+
+  log_trace_ls_spell_files "After"
+}
+
+nvim_generate_spellfile() {
+  log_trace_ls_spell_files() {
+    local when="$1"
+
+    ${SPELLS_VERBOSE:-false} || return 0
+
+    >&2 echo "${when} Neovim mkspell:"
+    >&2 echo "  $ ll ${active_spell}*"
+    command ls -la ${active_spell}* | >&2 sed 's/^/  /'
+    >&2 echo
+  }
+
+  log_trace_ls_spell_files "Before"
+
+  # Create '.spl' file, e.g.,
+  #   :execute 'mkspell! ~/.local/share/nvim/site/spell/en.utf-8.add'
+  # will generate the spell file:
+  #   ~/local/share/nvim/site/spell/en.utf-8.add.spl
+
+  # REFER: -Es — Silent (non-interactive) Ex mode, reading stdin as text.
+
+  >&2 echo "nvim -Es -c \"execute 'mkspell! ${NVIM_SPELL_FILE}'\" -c q"
+
+  nvim -Es -c "execute 'mkspell! ${NVIM_SPELL_FILE}'" -c q
 
   log_trace_ls_spell_files "After"
 }
