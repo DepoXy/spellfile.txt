@@ -29,12 +29,25 @@ init_spellssh() {
   # E.g., ~/.vim/spell/en.utf-8.add
   VIM_SPELL_FILE="${HOME}/${VIM_SPELL_PATH}"
 
-  # E.g., nvim/spell
-  NVIM_SPELL_DIR="${NVIM_APPNAME:-nvim}/spell"
-  # E.g., nvim/spell/en.utf-8.add
-  NVIM_SPELL_PATH="${NVIM_SPELL_DIR}/${SPELL_NAME}"
-  # E.g., ~/.config/nvim/spell/en.utf-8.add
-  NVIM_SPELL_FILE="${XDG_CONFIG_HOME:-${HOME}/.config}/${NVIM_SPELL_PATH}"
+  # HSTRY/2025-09-20: Up to and including Neovim v0.11 uses config
+  # dir. for spell file; Neovim v0.12 changes to the data directory.
+  # - REFER: Per |news-changed| (not yet? |spell-load|).
+  # - SAVVY: Note the :echo echos to stderr.
+  if test "$(nvim -c ":echo has('nvim-0.12')" -c q --headless 2>&1)" = "1"; then
+    # E.g., nvim/site/spell
+    NVIM_SPELL_DIR="${NVIM_APPNAME:-nvim}/site/spell"
+    # E.g., nvim/site/spell/en.utf-8.add
+    NVIM_SPELL_PATH="${NVIM_SPELL_DIR}/${SPELL_NAME}"
+    # E.g., ~/.local/share/nvim/site/spell/en.utf-8.add
+    NVIM_SPELL_FILE="${XDG_DATA_HOME:-${HOME}/.local/share}/${NVIM_SPELL_PATH}"
+  else
+    # E.g., nvim/spell
+    NVIM_SPELL_DIR="${NVIM_APPNAME:-nvim}/spell"
+    # E.g., nvim/spell/en.utf-8.add
+    NVIM_SPELL_PATH="${NVIM_SPELL_DIR}/${SPELL_NAME}"
+    # E.g., ~/.config/nvim/spell/en.utf-8.add
+    NVIM_SPELL_FILE="${XDG_CONFIG_HOME:-${HOME}/.config}/${NVIM_SPELL_PATH}"
+  fi
 
   # E.g., /path/to/spellfile.txt
   SPF_BASE_DIR="$(dirname -- "$(realpath -- "$0")")/.."
@@ -590,8 +603,9 @@ print_vim_spell_file() {
   printf "%s" "${user_spell_file}"
 }
 
-# Check if ~/.vim/spell/en.utf-8.add -> local project file
+# Check if ~/.local/share/nvim/site/spell/en.utf-8.add -> local project file
 #    or if ~/.config/nvim/spell/en.utf-8.add -> local project file
+#    or if ~/.vim/spell/en.utf-8.add -> local project file
 is_canonical_spell_file() {
   local homeish_path="$1"
 
