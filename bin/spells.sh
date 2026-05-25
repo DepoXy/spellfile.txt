@@ -521,7 +521,7 @@ nvim_generate_spellfile() {
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 
 print_meld_command() {
-  # SAVVY: Just check dir., as flatpak-info is slower. E.g., not:
+  # SAVVY: Just check dir., as flatpak-info is slow(er). E.g., not:
   #
   #   if command -v "flatpak" > /dev/null 2>&1; then
   #     # CXREF: ${HOME}/.local/share/flatpak/app/org.gnome.meld
