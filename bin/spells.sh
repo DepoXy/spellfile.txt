@@ -230,10 +230,9 @@ compile_spells() {
         echo "#        the active Vim spell file:"
         echo "#          ${active_spell}"
         echo
-        echo "$(print_meld_command) \\"
-        echo '  "'"${source_spell}"'" \'
-        echo '  <(sed '0,/^✂️$/d' "'"${spells_sync_executable}"'") \'
-        echo '  2>/dev/null &'
+        print_sync_script_main "${source_spell}" "${spells_sync_executable}"
+        echo
+        echo "main &"
         echo
         echo "exit 0"
         echo
@@ -263,6 +262,59 @@ compile_spells() {
   #  nvim_generate_spellfile
 
   echo "${compiled_spells}"
+}
+
+# BWARE: Using <() process substitution doesn't completely work:
+# - You cannot run two Flatpak Meld spell compares simultaneously.
+# - It works for the first compare, e.g.,
+#     /path/to/nvim/site/spell/sync-spells--1-new.sh
+# - But if you run another sync-spells, e.g.,
+#     /path/to/nvim/site/spell/sync-spells--2-new.sh
+#   this one won't load properly:
+#   - The right side is blank, which is the input from the <(process).
+#     - (Author also sees same path used for both Meld compares, e.g.,
+#        "/dev/fs/63", though unsure that matters.)
+#   - Meld might also prompt, "Change highlighting incomplete", with
+#     [Hide] and [Keep highlighting] buttons.
+# - So this (original) code isn't ideal:
+#     echo "$(print_meld_command) \\"
+#     echo '  "'"${source_spell}"'" \'
+#     echo "  <(sed '0,/^✂️\$/d' \"${spells_sync_executable}\") \\"
+#     echo '  2>/dev/null'
+#   - Because user cannot run two Flatpak Meld compares side-by-side
+#     (which can be useful, especially if you manage lots of separate
+#     spellfiles, and you run Flatpak Meld and not macOS meld or meld
+#     from source).
+# - It's probably (possibly?) a sandboxxing issue, though curious why
+#   first <(substitution) works, and it's just the <(second) that doesn't...
+#   - And this doesn't work either:
+#       flatpak run --filesystem=host org.gnome.meld ...
+#   - Note the author does not have this issue running meld from
+#     sources, or system meld (e.g., from APT); only Flatpak Meld.
+#   - REFER: See also:
+#     https://www.google.com/search?q=flatpak+two+processes+cannot+access+same+process+substitution+file
+# - KLUGE(SORTA): Use a /tmp file instead of <(process substitution).
+#   - Note the code now backgrounds the Bash function, not just the
+#     meld process, so it can cleanup properly.
+print_sync_script_main() {
+  local source_spell="$1"
+  local spells_sync_executable="$2"
+
+  echo 'main() {'
+  echo '  local rhs_spells'
+  echo '  rhs_spells="$(mktemp -t "spellfile.txt--sync-spells--XXXX")"'
+  echo
+  echo "  sed -e '0,/^✂️\$/d' \\"
+  echo "    \"${spells_sync_executable}\" \\"
+  echo '    > "${rhs_spells}"'
+  echo
+  echo "  $(print_meld_command) \\"
+  echo "    \"${source_spell}\" \\"
+  echo '    "${rhs_spells}" \'
+  echo '    2>/dev/null'
+  echo
+  echo '  command rm -- "${rhs_spells}"'
+  echo '}'
 }
 
 # ***
@@ -578,7 +630,13 @@ print_meld_command() {
   # or Meld from sources (macOS).
 
   if is_meld_flatpak_installed; then
-    printf "%s" "flatpak run org.gnome.meld"
+    # Grant the Meld Flatpak sandbox temporary access to /tmp filesystem.
+    # - This could be a security risk, but we trust Meld, right.
+    # - ALTLY: We could instead defer security decisions to the user:
+    #     # Tell user to grant permanent /tmp access, e.g., by running:
+    #     #   flatpak override --user --filesystem=/tmp org.gnome.meld
+    #     alert_if_flatpak_meld_cannot_access_tmp
+    printf "%s" "flatpak run --filesystem=/tmp org.gnome.meld"
   elif is_meld_sources_installed; then
     print_meld_sources
   elif is_meld_application_installed; then
@@ -597,6 +655,42 @@ print_meld_command() {
 
     exit_1
   fi
+}
+
+# ***
+
+# Because sandboxxed, Flatpak Meld not allowed in /tmp by default.
+# - REFER: man flatpak-override
+# - ALTLY: One-off access:
+#     flatpak run --filesystem=/tmp org.gnome.meld [file1] [file2]
+# - SAVVY: The basic overrides file is very, er, basic:
+#     $ cat ~/.local/share/flatpak/overrides/org.gnome.meld
+#     [Context]
+#     filesystems=/tmp;
+#   - But author assumes if user set some other overrides,
+#     that file might change. So let's not check its contents,
+#     other than to assume they exist.
+#     - We do know that, by default, that file doesn't exist.
+#       - So assume if it exists, user knows what they're doing,
+#         and doesn't need an alertment.
+alert_if_flatpak_meld_cannot_access_tmp() {
+  # Only print one alert, for the first file (sync-spells--1-new.sh).
+  if [ "${i_spell}" -ne 1 ]; then
+
+    return
+  fi
+
+  local overrides_path="${XDG_DATA_HOME:-${HOME}/.local/share}/flatpak/overrides/org.gnome.meld"
+  if [ -s "${overrides_path}" ]; then
+
+    return
+  fi
+
+  >&2 echo "ERROR: Flatpak Meld has not been granted access to /tmp"
+  >&2 echo "- So the sync-spells.shs will likely fail (╥﹏╥)ノシ"
+  >&2 echo "- Create the overrides file to grant access to /tmp:"
+  >&2 echo "-   # Creates: ${overrides_path}"
+  >&2 echo "    flatpak override --user --filesystem=/tmp org.gnome.meld"
 }
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
