@@ -143,6 +143,7 @@ compile_spells() {
         elif command -v vim >/dev/null; then
           vim_generate_spellfile "${active_spell}"
         fi
+        echo
 
         log_user_alert() {
           ${SPELLS_VERBOSE:-false} || return 0
@@ -162,7 +163,16 @@ compile_spells() {
         if command rm -- "${active_spell}.spl" 2>/dev/null; then
           >&2 echo "✗ Removed intermediate .spl (not ~/.vim's): ${active_spell}.spl"
         else
-          >&2 echo "GAFFE: No .spl file at: ${active_spell}.spl"
+          # DUNNO/2026-05-25: Was this Vim behavior, but not Neovim behavior?
+          # - I just don't remember seeing this GAFFE until now (1+ years using
+          #   Neovim)..
+          #     >&2 echo "GAFFE: No .spl file at: ${active_spell}.spl"
+          # - Note that Neovim manages the .spl file, which is a binary file;
+          #   and that this project doesn't use it/touch it. Find it at, e.g.:
+          #     ~/.local/share/nvim/site/spell/en.utf-8.add.spl
+          #   - And you likely won't find a "(not ~/.vim's)" file at
+          #     ~/path/to/private/spellfile/nvim/site/spell/en.utf-8.add.spl
+          >&2 echo "✓ Verified no intermediate .spl: ${active_spell}.spl"
         fi
       fi
     fi
